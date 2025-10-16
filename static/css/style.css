@@ -1,0 +1,33 @@
+/* static/css/style.css - Custom styles for Chroma-Mood */
+
+/* Center the main content of the page */
+.text-center {
+    text-align: center;
+}
+
+/* Styling for the results container */
+.results-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Styling for the colored result box */
+.result-color-box {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle box-shadow */
+    transition: background-color 0.5s ease; /* Smooth background color transition */
+}
+
+/* Styling for the emotion text inside the result box */
+.emotion-text {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3); /* Text shadow for readability */
+}

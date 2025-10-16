@@ -1,0 +1,30 @@
+<!-- templates/index.html - Home page for the Emotion-to-Color Translator -->
+
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="mb-4">Emotion-to-Color Translator</h1>
+    <p class="lead">Type in how you're feeling, and we'll translate it into a color.</p>
+</div>
+
+<!-- Form for user input -->
+<form method="POST" action="/" class="mt-4">
+    <div class="mb-3">
+        <textarea name="user_text" class="form-control" rows="4" placeholder="How are you feeling today?">{{ user_text }}</textarea>
+    </div>
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary btn-lg">Translate Emotion</button>
+    </div>
+</form>
+
+<!-- Results section -->
+{% if emotion and color %}
+<div class="results-container mt-5">
+    <div class="result-color-box" style="background-color: {{ color }};">
+        <h2 class="emotion-text">{{ emotion }}</h2>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

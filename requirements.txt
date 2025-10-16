@@ -1,0 +1,17 @@
+Flask
+pandas
+numpy
+scikit-learn
+opencv-python
+matplotlib
+seaborn
+tensorflow
+keras
+flask
+dvc
+huggingface_hub
+transformers
+librosa
+soundfile
+deepface
+nltk
