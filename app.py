@@ -4,14 +4,21 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from flask import Flask, render_template, request, Response, jsonify
+from flask_cors import CORS
 from tensorflow.keras.models import load_model
-import sounddevice as sd
+# import sounddevice as sd # Removed for client-side recording
 import scipy.io.wavfile as wav
 import librosa
 import joblib
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from pydub import AudioSegment
+import imageio_ffmpeg
+
+# Configure pydub to use imageio-ffmpeg's binary
+AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
 
 app = Flask(__name__)
+CORS(app) # Enable CORS for all routes
 
 # --- Configuration ---
 VIDEO_MODEL_PATH = os.path.join('VideoEmotions', 'emotionsvideomodel.h5')
@@ -59,59 +66,10 @@ cap = None
 
 # --- Helper Functions ---
 
-def get_video_capture():
-    global cap
-    if cap is None or not cap.isOpened():
-        cap = cv2.VideoCapture(0)
-    return cap
-
-def generate_frames():
-    global video_start_time, video_processing, video_emotion_scores, cap
-    
-    cap = get_video_capture()
-    
-    # Reset scores and timer
-    video_emotion_scores = np.zeros(len(VIDEO_EMOTION_LABELS))
-    video_start_time = time.time()
-    video_processing = True
-    
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-    while video_processing:
-        # Stop after 10 seconds
-        if time.time() - video_start_time >= 10:
-            video_processing = False
-            break
-
-        success, frame = cap.read()
-        if not success:
-            break
-
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-            roi_gray = gray[y:y + h, x:x + w]
-            roi_gray = cv2.resize(roi_gray, (48, 48))
-            roi_gray = roi_gray.astype('float') / 255.0
-            roi_gray = np.expand_dims(roi_gray, axis=0)
-            roi_gray = np.expand_dims(roi_gray, axis=-1)
-
-            if video_model:
-                prediction = video_model.predict(roi_gray, verbose=0)
-                video_emotion_scores += prediction[0]
-
-        # Encode frame for streaming
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    
-    # Release camera when done (optional, but good practice if we want to allow other apps to use it)
-    # cap.release() 
+# Server-side recording functions removed
+# def record_audio...
+# def get_video_capture...
+# def generate_frames... 
 
 def record_audio(duration=5, fs=16000, filename="temp_audio.wav"):
     print("Recording...")
@@ -209,29 +167,81 @@ def index():
 
     return render_template('index.html', user_text=user_text, emotion=emotion, color=color)
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route('/text_predict', methods=['POST'])
+def text_predict():
+    try:
+        data = request.get_json()
+        user_text = data.get('text', '')
+        
+        if not user_text:
+             return jsonify({"error": "No text provided"}), 400
 
-@app.route('/video_result')
-def video_result():
-    if np.sum(video_emotion_scores) == 0:
-        return jsonify({"error": "No faces detected or processing not started."})
+        if not text_model:
+             return jsonify({"error": "Text model not loaded"}), 503
 
-    final_index = np.argmax(video_emotion_scores)
-    dominant_emotion = VIDEO_EMOTION_LABELS[final_index]
+        # Preprocess text
+        text_vectorized = vectorizer.transform([user_text]).toarray()
+        
+        # Predict
+        prediction = text_model.predict(text_vectorized, verbose=0)
+        predicted_index = np.argmax(prediction)
+        emotion = label_encoder.inverse_transform([predicted_index])[0]
+        
+        # Map emotion to color
+        color = get_color_for_emotion(emotion)
+        
+        return jsonify({
+            "emotion": emotion,
+            "color": color
+        })
+                
+    except Exception as e:
+        print(f"Error in text prediction: {e}")
+        return jsonify({"error": str(e)}), 500
 
-    # Adjustments from original code
-    if dominant_emotion == 'Surprise':
-        dominant_emotion = 'Happy'
-    elif dominant_emotion == 'Disgust':
-        dominant_emotion = 'Angry'
+@app.route('/video_frame_predict', methods=['POST'])
+def video_frame_predict():
+    if not video_model:
+        return jsonify({"error": "Video model not loaded"}), 503
 
-    return jsonify({
-        "dominant_emotion": dominant_emotion,
-        "score": float(video_emotion_scores[final_index]),
-        "color": get_color_for_emotion(dominant_emotion)
-    })
+    try:
+        file = request.files.get('frame')
+        if not file:
+            return jsonify({"error": "No frame provided"}), 400
+
+        # Decode image
+        npimg = np.frombuffer(file.read(), np.uint8)
+        frame = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+        
+        if frame is None:
+             return jsonify({"error": "Could not decode image"}), 400
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        if len(faces) == 0:
+            return jsonify({"status": "no_face"})
+
+        # Process the first face found
+        (x, y, w, h) = faces[0]
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_gray = cv2.resize(roi_gray, (48, 48))
+        roi_gray = roi_gray.astype('float') / 255.0
+        roi_gray = np.expand_dims(roi_gray, axis=0)
+        roi_gray = np.expand_dims(roi_gray, axis=-1)
+
+        prediction = video_model.predict(roi_gray, verbose=0)
+        
+        # Return raw scores for client-side aggregation
+        return jsonify({
+            "status": "success",
+            "scores": prediction[0].tolist()
+        })
+
+    except Exception as e:
+        print(f"Error in video frame prediction: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/voice_predict', methods=['POST'])
 def voice_predict():
@@ -239,13 +249,47 @@ def voice_predict():
         return jsonify({"error": "Voice model not loaded."})
 
     try:
-        # Record audio
-        filename = record_audio()
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part"}), 400
         
-        # Predict
-        feature = extract_voice_features(filename)
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        # Save temporarily (original format)
+        original_filename = "temp_upload" + os.path.splitext(file.filename)[1]
+        wav_filename = "temp_upload.wav"
+        file.save(original_filename)
+        
+        try:
+            # Convert to WAV using ffmpeg directly via subprocess
+            import subprocess
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            
+            # -y: overwrite output files
+            # -i: input file
+            # output file is the last argument
+            command = [ffmpeg_exe, '-y', '-i', original_filename, wav_filename]
+            
+            # Run conversion, suppress output
+            subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            # Predict using the converted WAV file
+            feature = extract_voice_features(wav_filename)
+            
+        except Exception as conversion_error:
+            print(f"Conversion error: {conversion_error}")
+            # Fallback: try using the original file if conversion fails
+            feature = extract_voice_features(original_filename)
+
+        # Cleanup
+        if os.path.exists(original_filename):
+            os.remove(original_filename)
+        if os.path.exists(wav_filename):
+            os.remove(wav_filename)
+
         if feature is None:
-             return jsonify({"error": "Could not extract features."})
+             return jsonify({"error": "Could not extract features. Ensure file is a valid audio file."})
         
         feature = np.expand_dims(feature, axis=0)
         feature = np.expand_dims(feature, axis=-1)
@@ -254,10 +298,6 @@ def voice_predict():
         predicted_index = np.argmax(prediction)
         predicted_emotion = VOICE_EMOTION_LABELS[predicted_index]
         confidence = float(prediction[0][predicted_index])
-        
-        # Cleanup
-        if os.path.exists(filename):
-            os.remove(filename)
             
         return jsonify({
             "emotion": predicted_emotion,
