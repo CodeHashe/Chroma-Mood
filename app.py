@@ -309,4 +309,5 @@ def voice_predict():
         return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run on 0.0.0.0 to allow external access (e.g., from EC2 public IP)
+    app.run(host='0.0.0.0', port=5000, debug=True)
