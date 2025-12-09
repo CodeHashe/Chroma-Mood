@@ -16,3 +16,5 @@ soundfile
 deepface
 nltk
 mlflow
+soundfile
+sounddevice

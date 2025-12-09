@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/abdul/Desktop/Chroma-Mood/VoiceModule/mlruns/762629797641819961/models/m-596e9c2868b846d4a00b42940c4fadd7/artifacts
+creation_timestamp: 1765287932959
+experiment_id: '762629797641819961'
+last_updated_timestamp: 1765288210290
+model_id: m-596e9c2868b846d4a00b42940c4fadd7
+model_type: null
+name: model
+source_run_id: 1f7822b47e004bbbba9fa70a6d3f57b2
+status: 2
+status_message: null

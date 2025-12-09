@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/abdul/Desktop/Chroma-Mood/Text-to-Emotion/Model/mlruns/850045198824319057/models/m-4b4c5b140d3b4c12b74a19912f293ebd/artifacts
+creation_timestamp: 1765289338700
+experiment_id: '850045198824319057'
+last_updated_timestamp: 1765289346800
+model_id: m-4b4c5b140d3b4c12b74a19912f293ebd
+model_type: null
+name: TexttoEmotion_model
+source_run_id: 9f9c274fc8e743f9b794cd6f878e52be
+status: 2
+status_message: null

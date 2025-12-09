@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/abdul/Desktop/Chroma-Mood/Text-to-Emotion/Model/mlruns/850045198824319057/9f9c274fc8e743f9b794cd6f878e52be/artifacts
+end_time: 1765289346821
+entry_point_name: ''
+experiment_id: '850045198824319057'
+lifecycle_stage: active
+run_id: 9f9c274fc8e743f9b794cd6f878e52be
+run_name: adorable-sloth-407
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765289195041
+status: 3
+tags: []
+user_id: abdul

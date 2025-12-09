@@ -1,0 +1,30 @@
+artifact_path: file:///C:/Users/abdul/Desktop/Chroma-Mood/VoiceModule/mlruns/762629797641819961/models/m-596e9c2868b846d4a00b42940c4fadd7/artifacts
+flavors:
+  python_function:
+    data: data
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.tensorflow
+    python_version: 3.12.10
+  tensorflow:
+    code: null
+    data: data
+    keras_version: 2.20.0
+    model_type: keras
+    save_format: tf
+is_signature_from_type_hint: false
+mlflow_version: 3.6.0
+model_id: m-596e9c2868b846d4a00b42940c4fadd7
+model_size_bytes: 14558452
+model_uuid: m-596e9c2868b846d4a00b42940c4fadd7
+prompts: null
+run_id: 1f7822b47e004bbbba9fa70a6d3f57b2
+signature:
+  inputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1, 40,
+    1]}}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float32", "shape": [-1,
+    8]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-12-09 13:50:00.680224'

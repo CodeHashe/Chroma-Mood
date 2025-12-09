@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/abdul/Desktop/Chroma-Mood/VoiceModule/mlruns/762629797641819961/1f7822b47e004bbbba9fa70a6d3f57b2/artifacts
+end_time: 1765288211416
+entry_point_name: ''
+experiment_id: '762629797641819961'
+lifecycle_stage: active
+run_id: 1f7822b47e004bbbba9fa70a6d3f57b2
+run_name: nosy-skink-500
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765287932864
+status: 3
+tags: []
+user_id: abdul
