@@ -14,6 +14,12 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from pydub import AudioSegment
 import imageio_ffmpeg
 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # Configure pydub to use imageio-ffmpeg's binary
 AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
 
@@ -131,6 +137,7 @@ def get_color_for_emotion(emotion):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    logger.info(f"Connection received from {request.remote_addr} to /")
     """
     Main page. Handles text input (existing) and links to other modules.
     """
@@ -169,6 +176,7 @@ def index():
 
 @app.route('/text_predict', methods=['POST'])
 def text_predict():
+    logger.info(f"Connection received from {request.remote_addr} to /text_predict")
     try:
         data = request.get_json()
         user_text = data.get('text', '')
@@ -190,6 +198,7 @@ def text_predict():
         # Map emotion to color
         color = get_color_for_emotion(emotion)
         
+        logger.info(f"Text prediction: {emotion} (Color: {color})")
         return jsonify({
             "emotion": emotion,
             "color": color
@@ -201,6 +210,7 @@ def text_predict():
 
 @app.route('/video_frame_predict', methods=['POST'])
 def video_frame_predict():
+    logger.info(f"Connection received from {request.remote_addr} to /video_frame_predict")
     if not video_model:
         return jsonify({"error": "Video model not loaded"}), 503
 
@@ -234,6 +244,7 @@ def video_frame_predict():
         prediction = video_model.predict(roi_gray, verbose=0)
         
         # Return raw scores for client-side aggregation
+        logger.info(f"Video frame processed. Scores: {prediction[0].tolist()}")
         return jsonify({
             "status": "success",
             "scores": prediction[0].tolist()
@@ -245,6 +256,7 @@ def video_frame_predict():
 
 @app.route('/voice_predict', methods=['POST'])
 def voice_predict():
+    logger.info(f"Connection received from {request.remote_addr} to /voice_predict")
     if not voice_model:
         return jsonify({"error": "Voice model not loaded."})
 
@@ -299,6 +311,7 @@ def voice_predict():
         predicted_emotion = VOICE_EMOTION_LABELS[predicted_index]
         confidence = float(prediction[0][predicted_index])
             
+        logger.info(f"Voice prediction: {predicted_emotion} (Confidence: {confidence:.2f})")
         return jsonify({
             "emotion": predicted_emotion,
             "confidence": confidence,
